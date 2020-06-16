@@ -26,14 +26,15 @@ void softmax_tree(float *input, int batch, int inputs, float temp, tree *hierarc
 	}
 }
 
-softmax_layer make_softmax_layer(int batch, int inputs, int groups)
+softmax_layer make_softmax_layer(int batch, int inputs, int groups, int start_idx)
 {
     assert(inputs%groups == 0);
-    fprintf(stderr, "softmax                                        %4d\n",  inputs);
+    fprintf(stderr, "softmax                                    %4d classes: from %4d to %4d\n",  inputs, start_idx, start_idx + inputs - 1);
     softmax_layer l = { (LAYER_TYPE)0 };
     l.type = SOFTMAX;
     l.batch = batch;
     l.groups = groups;
+    l.start_idx = start_idx;
     l.inputs = inputs;
     l.outputs = inputs;
     l.loss = (float*)xcalloc(inputs * batch, sizeof(float));
@@ -107,7 +108,7 @@ void forward_softmax_layer_gpu(const softmax_layer l, network_state net)
         }
     }
     if(net.truth && !l.noloss){
-        softmax_x_ent_gpu(l.batch*l.inputs, l.output_gpu, net.truth, l.delta_gpu, l.loss_gpu);
+        softmax_x_ent_gpu(l.batch*l.inputs, l.output_gpu, net.truth, l.delta_gpu, l.loss_gpu, l.start_idx);
         if(l.softmax_tree){
 			mask_gpu_new_api(l.batch*l.inputs, l.delta_gpu, SECRET_NUM, net.truth, 0);
 			mask_gpu_new_api(l.batch*l.inputs, l.loss_gpu, SECRET_NUM, net.truth, 0);
