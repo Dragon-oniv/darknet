@@ -1248,20 +1248,20 @@ extern "C" void smooth_l1_gpu(int n, float *pred, float *truth, float *delta, fl
     CHECK_CUDA(cudaPeekAtLastError());
 }
 
-__global__ void softmax_x_ent_kernel(int n, float *pred, float *truth, float *delta, float *error)
+__global__ void softmax_x_ent_kernel(int n, float *pred, float *truth, float *delta, float *error, int start_idx)
 {
 	int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
 	if (i < n) {
 		float t = truth[i];
-		float p = pred[i];
+		float p = pred[i + start_idx];
 		error[i] = (t) ? -log(p) : 0;
 		delta[i] = t - p;
 	}
 }
 
-extern "C" void softmax_x_ent_gpu(int n, float *pred, float *truth, float *delta, float *error)
+extern "C" void softmax_x_ent_gpu(int n, float *pred, float *truth, float *delta, float *error, int start_idx)
 {
-	softmax_x_ent_kernel << <cuda_gridsize(n), BLOCK, 0, get_cuda_stream() >> >(n, pred, truth, delta, error);
+	softmax_x_ent_kernel << <cuda_gridsize(n), BLOCK, 0, get_cuda_stream() >> >(n, pred, truth, delta, error, int start_idx);
     CHECK_CUDA(cudaPeekAtLastError());
 }
 
