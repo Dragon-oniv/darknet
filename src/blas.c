@@ -422,11 +422,11 @@ void softmax_x_ent_cpu(int n, float *pred, float *truth, float *delta, float *er
     }
 }
 
-void logistic_x_ent_cpu(int n, float *pred, float *truth, float *delta, float *error)
+void logistic_x_ent_cpu(int n, float *pred, float *truth, float *delta, float *error, int start_idx)
 {
     int i;
     for(i = 0; i < n; ++i){
-        float t = truth[i];
+        float t = truth[i + start_idx];
         float p = pred[i];
         error[i] = -t*log(p) - (1-t)*log(1-p);
         delta[i] = t-p;
